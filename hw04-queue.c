@@ -81,11 +81,11 @@ readline(queue* q, char* newline){
    if(strcmp("add", ptr) == 0){
       ptr = strtok(NULL, "\n");
       push(q, ptr);
-   } else if (strcmp("flush\n", ptr) == 0) {
+   } /* else if (strcmp("flush\n", ptr) == 0) {
       ptr = strtok(NULL, "\n");
       destroy_queue(q);
       q = init_queue();
-   }
+   }*/
 /*
    if (strcmp("remove\n", ptr) == 0) {
       ptr = strtok(NULL, "\n");
