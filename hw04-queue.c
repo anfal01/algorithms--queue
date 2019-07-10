@@ -2,125 +2,113 @@
 #include <stdlib.h>
 #include <string.h>
 
-struct node{
-   char *data;
-   struct node *next;
-};
+typedef struct Node{
+   char* data;
+   struct Node* next;
+} node;
 
-struct Queue{
-   struct node *first;
-   struct node *last;
+typedef struct queue{
+   struct Node* first;
+   struct Node* last;
    int size;
-};
+} queue;
 
-/* printing the queue*/ 
-void printQueue(struct Queue *q){
-   struct node* temp = q->first;
-   fprintf(stdout, "Items in queue: ");
-   while(temp->next != NULL) {
-      printf("%s ",temp->data);
-      temp = temp->next;
+queue* init_queue (){
+   queue* q = calloc(1, sizeof(queue));
+   q->last = q->first = NULL;
+   q->size = 0;                              /*  0 must not necessarily be represented by all 0 bits, cannot trust calloc  */
+   return q;
+}
+node* init_node (char* _data) {
+   node* n = calloc(1, sizeof(node));
+   n->next = NULL;
+   n->data = _data;
+   return n;
+}
+node* destroy_node(node* n) {
+   node* ret = n->next;
+   free(n->data);
+   free(n);
+   return ret;
+}
+void destroy_queue(queue* q) {
+   node* n = q->first;
+   while (n != q->last) {
+      n = destroy_node(n);
    }
+   destroy_node(q->last);
+   free(q);
+}
+
+void print_queue(queue* q) {
+   node* f = q->first;
+
+   fprintf(stdout, "Items in queue: ");
+   do {
+      printf("%s ",f->data);
+      f = f->next;
+   } while (f != q->last);
    printf("\n");
 }
 
-/* Initialize Queue */
-void init(struct Queue *q){
-   q->first = NULL;
-   q->last = NULL;
-   q->size = 1;
-}
-
-char *front(struct Queue *q){
+char* front(queue* q){
    return q->first->data;
 }
 
-/* come back to this later */
-void pop(struct Queue *q){
-   struct node *tmp;
+void push(queue* q, char* _data) {
+   node* n = init_node(_data);
+   if (q->first == NULL) q->first = q->last = n;
+   q->last = q->last->next = n;
+   q->size++;
+   fprintf(stdout, "Add: %s\n", _data);
+}
+
+int pop(queue* q){
+   node* f = q->first;
+   if (f == NULL) return 1;
+   fprintf(stdout, "Remove: %s\n", f);
+   f = f->next;
    q->size--;
-   
-   if(q->first == NULL){
-      printf("queue is empty!");
-   }
-
-   fprintf(stdout, "Remove: %s\n", q->first);
-   tmp = q->first;
-   q->first = q->first->next;
-   free(tmp); 
-
+   free(f);
+   return 0;
 }
 
-void push(struct Queue *q, char *data) {
-   
-   struct node* temp;
-
-   if (q->first == NULL) {
-      fprintf(stdout, "Queue is empty!\n");
-      q->first = malloc(sizeof(struct node));
-      q->first->data = data;
-      q->first->next = NULL;
-      q->last = q->first;
-   }
-/*   else {
-      q->last->next = malloc(sizeof(struct node));
-      q->last->next->data = data;
-      q->last->next->next = NULL;
-      q->last = q->last->next;
-   }
-*/
-   temp  = (struct node*)malloc(sizeof(struct node));
-   temp->data = data;
-   temp->next = NULL;
-   q->last->next = temp;
-   q->last = temp;
-   fprintf(stdout, "Add: %s\n", q->last->data);
-   
-}
-
-readline(struct Queue *q, char *newline){
+readline(queue* q, char* newline){
    char delim[] = ",";
    int i;
-   char *ptr = strtok(newline, delim);
-   
+   char* ptr = strtok(newline, delim);
    printf("***%s***\n", ptr);
    if(strcmp("add", ptr) == 0){
       ptr = strtok(NULL, "\n");
       push(q, ptr);
-      printf("\n");
+   } else if (strcmp("flush\n", ptr) == 0) {
+      ptr = strtok(NULL, "\n");
+      destroy_queue(q);
+      q = init_queue();
    }
 /*
    if (strcmp("remove\n", ptr) == 0) {
       ptr = strtok(NULL, "\n");
       pop(q);
    }
-   if(strcmp("flush\n", ptr) == 0){
-      ptr = strtok(NULL, "\n");
-      while(newline != NULL)
-         pop(q);
-   }
 */
-   printQueue(q);
+   
+
+   print_queue(q);
 }
 
 int main(void){
-   struct Queue q;
-   char *line;
-   char *newline;
-   
-   init(&q);
-
-   newline = malloc(512 * sizeof(char));
-
+   queue* q = init_queue();
+   char* line;
+   char* newline;
+   newline = calloc(512, sizeof(char));
    while (fgets(newline, 512, stdin) != NULL){
-      readline(&q, newline);
+      readline(q, newline);
    }
-
    if (fgets(line, sizeof(line), stdin) == NULL)
       return -1;
 
    free(newline);
-
+   destroy_queue(q);
    return 0;
-
 }
